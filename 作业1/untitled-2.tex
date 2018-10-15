@@ -1,0 +1,131 @@
+\documentclass[withoutpreface,bwprint]{cumcmthesis}
+%这里是导言区
+\usepackage{url}
+\usepackage{epsfig}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{diagbox}
+\usepackage{algorithm}
+\usepackage{listings}
+\usepackage{algpseudocode}
+\usepackage{appendix}
+\usepackage{mathrsfs}
+\title{图像处理中的数学方法 hw1}
+\date{\today}
+\author{Jinze Wu 1700010643}
+\begin{document}
+\maketitle
+
+\section{作业内容1}
+梯度的离散逼近：
+\begin{equation}
+\left.\frac{\partial u}{\partial x}\right|_{i,j}\approx \lambda \frac{v_{i+1,j}-v_{i-1,j}}{2h}+
+\frac{1-\lambda}{2}(\frac{v_{i+1,j+1}-v_{i-1,j+1}}{2h}+\frac{v_{i+1,j-1}-v_{i-1,j-1}}{2h})
+\end{equation}
+
+左图中计算得
+$ \nabla v=(1/2,0)$，$\lVert \nabla u \rVert_{2}=\frac{1}{2}$
+
+右图中计算得
+$\nabla v=((1+\lambda)/4,(1+\lambda)/4)$，$\lVert \nabla u \rVert_{2}=\frac{1+\lambda}{4}\sqrt{2}$
+
+左右两边相等时$\lambda=\sqrt{2}-1$
+
+Laplace的离散逼近
+\begin{equation}
+\begin{split}
+\left.\triangle v\right|_{i,j}\approx \lambda \frac{v_{i+1,j}+v_{i-1,j}+v_{i,j+1}+v_{i,j-1}-4v_{i,j}}{h^{2}}+\\
+(1-\lambda)(\frac{v_{i+1,j+1}+v_{i-1,j+1}+v_{i+1,j-1}+v_{i-1,j-1}-4v_{i,j}}{2h^{2}})
+\end{split}
+\end{equation}
+
+左图中计算得
+$ \triangle v=1$
+
+右图中计算得
+$\triangle v=\frac{1+3\lambda}{2}$
+
+左右两边相等时$\lambda=\frac{1}{3}$
+
+\section{作业内容2}
+\subsection{问题描述}
+用以下模型对图片进行去噪去模糊
+\begin{equation}
+\hat{u}=argmin_{u}\lambda \int \lvert \nabla u\rvert dx+\frac{1}{2}\int (\mathcal{A}u-f)^{2}dx
+\end{equation}
+
+其中 f 是待去噪去模糊的图片, u 是优化变量, 得到的最优解 û 为处理结果. A 是以 k
+为卷积核的卷积算子:
+
+求解方法：对(3)式采用Alternative Direction Minimization of Multipliers (ADMM)算法
+
+\begin{equation}
+\mathcal{A}u=k\ast u
+\end{equation}
+\subsection{求解方法}
+
+注：以下离散均选取循环边值条件，步长h=1
+
+先将原问题离散：
+
+TV的离散：
+\begin{equation}
+\int \lvert \nabla u\rvert dx=\sum_{i,j=1}^N\lvert \left.\nabla u\right|_{i,j}\rvert
+\end{equation}
+
+其中梯度的离散
+
+\begin{equation}
+\left.\nabla u\right|_{i,j}\approx (u_{i+1,j}-u_{i,j},u_{i,j+1}-u_{i,j})
+\end{equation}
+
+\begin{equation}
+\int (\mathcal{A}u-f)^{2}dx=\sum_{i,j=1}^N\lvert \mathcal{A}u\rvert_{i,j}-f\rvert_{i,j} \rvert^{2}
+\end{equation}
+
+再将$u_{i,j}\quad i,j=1,2,\dots,N$向量化为一个$N^2\times 1$的向量,对应的也将f向量化
+
+设差分梯度算子$\nabla u=(W_{1}u,W_{2}u)$其中$W_{1},W_{2}$是$N^2\times N^2$矩阵，卷积算子$\mathcal{A}$对应于将$N^2\times N^2$矩阵A左乘u,即得：
+\begin{equation}
+\int \lvert \nabla u\rvert dx =\lvert Wu\rvert_{tv} \quad \int (\mathcal{A}u-f)^{2}dx=\lvert Au-f\rvert_{2}
+\end{equation}
+
+则原问题转化为：
+
+\begin{equation}
+\hat{u}=argmin_{u}\lambda \lvert Wu\rvert_{tv}+\frac{1}{2}(\mathcal{A}u-f)^{2}
+\end{equation}
+再对离散问题采用Alternative Direction Minimization of Multipliers (ADMM)算法：
+
+选取初值$d_{0},b_{0}$，参数$\mu ,\delta$,每步迭代
+\begin{equation}
+\begin{split}
+&u_{k+1}=(A^TA+\mu W^TW)^{-1}(A^tf+\mu W^T(d_{k})-b_{k})\\
+&d_{k+1}=P_{\lambda /\mu}(Wu_{k+1}+b_{k}) \quad P_{\lambda}{v}=\frac{v}{\lvert v\rvert}max\{ \lvert v\rvert-\lambda,0\}\\
+&b_{k+1}=b_{k}+\delta(Wu_{k+1}-d_{k+1})
+\end{split}
+\end{equation}
+
+而令
+\begin{equation}
+D=
+\begin{bmatrix}
+-1     & 0 & \cdots & 0 &1\\
+1      &-1 & \cdots & 0 &0\\
+        & 1 & \ddots & \vdots& \vdots\\
+\vdots      & \vdots &    &-1  &0\\
+0      &0  &\cdots  &1 &-1
+\end{bmatrix}
+\end{equation}
+
+则$W_{1}=D\otimes I$,$W_{2}=I\otimes D$
+\subsubsection{迭代方法}
+\subsubsection{共轭梯度法}
+\subsubsection{快速Fourier变换}
+\subsection{边值条件}
+\subsubsection{循环卷积条件}
+
+\subsection{实验结果}
+
+\subsection{结果分析}
+\end{document}
